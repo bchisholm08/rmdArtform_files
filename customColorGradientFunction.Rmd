@@ -4,6 +4,9 @@ author: "Brady M. Chisholm"
 date: "2024-10-19"
 output: pdf_document
 ---
+Custom function takes n number of #----- formatted colors and converts them 
+into a smooth custom gradient over a predetermined distance.   
+
 ```{r custom color gradient function}
 gradientMyCols <- function(img = FALSE, ...){
   # Capture colors as arguments
@@ -11,11 +14,11 @@ gradientMyCols <- function(img = FALSE, ...){
   
   # Check if fewer than 2 colors provided
   if(length(colors) < 2){
-    stop("You must provide 2 colors")}
+    stop("You must provide minimum 2 colors")}
   
-  if(length(colors) > 8){ # currently limit max to 8. Will expand. Remember to scale palette_fn call  
-    warning("Only 8 colors will be used")
-    colors <- colors[1:8]}
+  if(length(colors) > 10){ # currently limit max to 10. Will expand. Remember to scale palette_fn call  
+    warning("Only 10 colors will be used. More than 10 were input")
+    colors <- colors[1:10]}
 
   colors <- unlist(colors) # colors to character vector 
   
@@ -24,17 +27,17 @@ gradientMyCols <- function(img = FALSE, ...){
   
   # If img true, generate gradient image
   if (img) {
-    # Generate 150 colors for gradient
-    gradientColors <- palette_fn(150)
-    # Plot the gradient
+    gradientColors <- palette_fn(150)  # Generate 150 colors for gradient, relatively smooth
+    # Plot gradient
+    # currently blank labels...
     image(1:150, 1, as.matrix(1:150), xlab = '', ylab='', col = gradientColors, useRaster = TRUE, axes = FALSE)} # end image 
-  
-    return(palette_fn) }# return color palette function 
+    return(palette_fn)}# end function
 ```
 
 ### EXAMPLES
 ```{r call function examples}
-myGradient <- gradientMyCols(0,"#8B1E3F", "#3C153B", "#89BD9E") # no image 
+myGradient <- gradientMyCols(0,"#8B1E3F", "#3C153B", "#89BD9E") # no image but save gradient to var name 
 gradientMyCols(1, "#8B1E3F", "#3C153B", "#89BD9E", "#F0C987", "#DB4C40") # image 
+gradientMyCols(1,"#170312", "#97D8B2")
 ```
 
