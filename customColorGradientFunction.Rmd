@@ -1,0 +1,40 @@
+---
+title: "gradientMyColors"
+author: "Brady M. Chisholm"
+date: "2024-10-19"
+output: pdf_document
+---
+```{r custom color gradient function}
+gradientMyCols <- function(img = FALSE, ...){
+  # Capture colors as arguments
+  colors <- list(...)
+  
+  # Check if fewer than 2 colors provided
+  if(length(colors) < 2){
+    stop("You must provide 2 colors")}
+  
+  if(length(colors) > 8){ # currently limit max to 8. Will expand. Remember to scale palette_fn call  
+    warning("Only 8 colors will be used")
+    colors <- colors[1:8]}
+
+  colors <- unlist(colors) # colors to character vector 
+  
+  # Create the color gradient
+  palette_fn <- colorRampPalette(colors, bias = 1) # grDevices function 
+  
+  # If img true, generate gradient image
+  if (img) {
+    # Generate 150 colors for gradient
+    gradientColors <- palette_fn(150)
+    # Plot the gradient
+    image(1:150, 1, as.matrix(1:150), xlab = '', ylab='', col = gradientColors, useRaster = TRUE, axes = FALSE)} # end image 
+  
+    return(palette_fn) }# return color palette function 
+```
+
+### EXAMPLES
+```{r call function examples}
+myGradient <- gradientMyCols(0,"#8B1E3F", "#3C153B", "#89BD9E") # no image 
+gradientMyCols(1, "#8B1E3F", "#3C153B", "#89BD9E", "#F0C987", "#DB4C40") # image 
+```
+

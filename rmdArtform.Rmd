@@ -1,0 +1,288 @@
+---
+title: "graphicToysRUs"
+author: "Brady M. Chisholm"
+date: "2024-09-26"
+output: html_document
+---
+  SCRIPT 
+Create some art with R code. Followed a tutorial online, hopefully lay some ground work so I know how to manipulate ggplot well. 
+source: https://art-from-code.netlify.app/day-1/session-1/ 
+Hopefully leads to the ability to create my own! I just need some groundwork so I know what functions to use. 
+####
+Install req. packages 
+```{r}
+library(ggplot2)
+library(tibble)
+```
+
+```{r}
+# Load dataset 
+data(mpg)
+```
+Basic practice plot 1 
+```{r}
+mpg |>
+  ggplot(aes(displ, hwy, color = drv)) +
+  geom_point()
+```
+Witchcraft begins
+
+```{r}
+mpg |>
+  ggplot(aes(displ, hwy, color = drv, size = cyl))+
+  geom_point(show.legend = F)+
+  theme_void()+
+  scale_color_brewer()
+```
+Even more silly ggplot2 
+
+Noise generation. Creates a set of random values. Though, it is interesting that I am generation identical plots to the tutorial...inputs can be replicated. 
+
+Plot noise we generated
+
+Create function in R? 
+```{r}
+polar_art <- function(seed, n, palette) {
+  
+  # set the state of the random number generator
+  set.seed(seed)
+  
+  # data frame containing random values for 
+  # aesthetics we might want to use in the art
+  dat <- tibble(
+    x0 = runif(n),
+    y0 = runif(n),
+    x1 = x0 + runif(n, min = -.2, max = .2),
+    y1 = y0 + runif(n, min = -.2, max = .2),
+    shade = runif(n), 
+    size = runif(n)
+  )
+  
+  # plot segments in various colours, using 
+  # polar coordinates and a gradient palette
+  dat |> 
+    ggplot(aes(
+      x = x0,
+      y = y0,
+      xend = x1,
+      yend = y1,
+      colour = shade,
+      size = size
+    )) +
+    geom_segment(show.legend = FALSE) +
+    coord_polar() +
+    scale_y_continuous(expand = c(0, 0)) +
+    scale_x_continuous(expand = c(0, 0)) + 
+    scale_colour_gradientn(colours = palette) + 
+    scale_size(range = c(0, 10)) + 
+    theme_void()
+}
+```
+Wrapped all of previous scripts into a function "polar_art". Inputs are in the () outside the function. Can call with different vars to get different plots, etc.
+```{r}
+polar_art(seed = 1, n = 500, palette = c("antiquewhite", "orange", "bisque"))
+
+polar_art(seed = 16, n = 1500, palette = c("antiquewhite", "orange", "bisque"))
+
+```
+#####
+Generative practice section
+```{r}
+library(scales)
+library(ggthemes)
+```
+Reference website for generating own color palettes. 'Speaks' in the alphanumeric color code or whatever
+https://coolors.co/
+```{r}
+palette1 <- c("#cdb4db", "#ffc8dd", "#ffafcc", "#bde0fe", "#a2d2ff")
+# now display the palette in plot fig
+show_col(palette1)
+```
+Construct a continuous color scale 
+```{r}
+palette_fn <- colorRampPalette(palette1)
+# decide how many colors you want distributed across range 
+# palette_fn <- (100)
+```
+Use image function to generate an illustration of our color 
+```{r}
+image(
+  x = matrix(1:100, ncol = 1), 
+  col = palette_fn(100),
+  useRaster = TRUE,
+  axes = FALSE
+)
+```
+ggthemes built in palettes (150) 
+```{r}
+canva_palettes[[101]]
+# Display the palette we selected 
+show_col(canva_palettes[[101]])
+```
+since 150 palettes exist, write a function to randomly select one
+```{r}
+sample_canva <- function(seed = NULL) {
+  if(!is.null(seed)) set.seed(seed)
+  sample(ggthemes::canva_palettes,1)[[1]]
+}
+```
+Call multiple functions we created, generating more complex art 
+```{r}
+polar_art(seed = 3, n = 150, palette = sample_canva(seed = 5))
+polar_art(seed = 6, n = 100, palette = sample_canva(seed = 1))
+```
+More advanced plot, allows for control over... 
+```{r}
+sample_data <- function(seed = NULL, n = 100){
+  if(!is.null(seed)) set.seed(seed)
+  dat <- tibble(
+    x0 = runif(n),
+    y0 = runif(n),
+    x1 = x0 + runif(n, min = -.2, max = .2),
+    y1 = y0 + runif(n, min = -.2, max = .2),
+    shade = runif(n), 
+    size = runif(n),
+    shape = factor(sample(0:22, size = n, replace = TRUE))
+  )
+}
+polar_styled_plot <- function(data = NULL, palette) {
+  ggplot(
+    data = data,
+    mapping = aes(
+      x = x0,
+      y = y0,
+      xend = x1,
+      yend = y1,
+      colour = shade,
+      size = size
+    )) + 
+    coord_polar(clip = "off") +
+    scale_y_continuous(
+      expand = c(0, 0),
+      limits = c(0, 1), 
+      oob = scales::oob_keep
+    ) +
+    scale_x_continuous(
+      expand = c(0, 0), 
+      limits = c(0, 1), 
+      oob = scales::oob_keep
+    ) + 
+    scale_colour_gradientn(colours = palette) + 
+    scale_size(range = c(0, 10)) + 
+    theme_void() + 
+    guides(
+      colour = guide_none(),
+      size = guide_none(),
+      fill = guide_none(),
+      shape = guide_none()
+    )
+}
+
+dat <- sample_data(n = 100, seed = 1) 
+pal <- sample_canva(seed = 1)
+
+polar_styled_plot(data = dat, palette = pal) + geom_segment()
+polar_styled_plot(data = dat, palette = pal) + geom_path()
+polar_styled_plot(data = dat, palette = pal) + geom_point()
+```
+Since ggplot allows layers, and each layer supplies its own data, we can reuse parts of the graphs in different ways. Generate two random data sets and feed into four separate geoms
+```{r}
+library(dplyr)
+library(crayon)
+dat1 <- sample_data(n = 2000, seed = 123) 
+dat2 <- sample_data(n = 100, seed = 456) |>  
+  mutate(y0 = .3 + y0 * .6, y1 = .3)
+
+polar_styled_plot(palette = sample_canva(seed = 7)) + 
+  geom_segment(
+    data = dat1 |> mutate(size = size * 3)
+  ) + 
+  geom_segment(
+    data = dat2 |> mutate(size = size / 5), 
+    lineend = "round", 
+    colour = "white"
+  ) +
+  geom_segment(
+    data = dat2 |> mutate(size = size / 40), 
+    lineend = "round", 
+    colour = "#222222"
+  ) +
+  geom_point(
+    data = dat2 |> mutate(size = size * 2),
+    colour = "#222222"
+  )
+
+dat <- sample_data(n = 2000, seed = 123) |>
+  mutate(y1 = y0, size = size / 2)
+
+polar_styled_plot(palette = sample_canva(seed = 456)) + 
+  geom_segment(data = dat) + 
+  geom_segment(data = dat |> mutate(y1 = y1 - .2, y0 = y0 - .2)) +
+  geom_segment(data = dat |> mutate(y1 = y1 - .4, y0 = y0 - .4))
+
+dat <- sample_data(n = 1000, seed = 1) |>
+  mutate(y1 = y0, size = size / 4)
+
+polar_styled_plot(palette = sample_canva(seed = 2)) + 
+  geom_segment(data = dat, linetype = "331311") 
+```
+End of art from code tutorial. 
+Start generating own art. How to break up the organized nature of the data? Circular, contained, repetitive, etc. Generate more random plots? Plot only odd num 
+```{r}
+oddMe1 <- seq(from = 1, to = 1000,by = 2)
+oddMe2 <- seq(from = 0, to = 14999, by = 3)
+plotMeDat <- cbind.data.frame(oddMe1,oddMe2)
+
+# rest of generated palette is -> ,"#9EC1A3","#CFE0C3"
+oddColorPalette <- c("#40798C","#CFE0C3")
+plotMeDat$group <- rep(oddColorPalette, length.out = nrow(plotMeDat))
+
+ggplot(
+  data = plotMeDat,
+  aes(x = oddMe1, y = oddMe2, color = oddColorPalette, size = 1)
+) +
+  geom_point()
+
+```
+Figure out how to plot along sine wave 
+
+create first plot
+utilize set seed? 
+```{r}
+# Define the sequence (using a smaller range for plotting)
+seqPlot <- seq(1, 10000, 1)
+
+# set y output, no need for function 
+y <- sqrt((sin(seqPlot)^10) * 5 * seqPlot)
+oddColorPalette <- c("#40798C","#CFE0C3")
+# plot 'funky y' against the linear x var. Sqrt x?
+plot(y,seqPlot,type ='p', col = oddColorPalette, main = "ggart I", xlab = "", ylab = "")
+```
+
+Convert seq plot into a reusable function
+```{r}
+plotMyCustomFunctionV_1 <- function(start,to,by){
+  library(ggplot2)
+  # generate random sequence based on inputs
+  plottingSequence <- seq(start,to,by)
+  # generate the 'funky' y coordinate from my formula 
+  specialFormVals <- sqrt((sin(plottingSequence)^10) * 5 * plottingSequence)
+  specialPalette <- c("#40798C","#CFE0C3")
+  (myFig <- ggplot(
+    myFig +
+  #plots the points
+  geom_point() +
+  #theme w/ white background
+  theme_bw() +
+  #remove background, gridlines, and chart border
+  theme(
+    plot.background = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank()
+  )
+  ))
+}
+```
+
+

@@ -1,0 +1,780 @@
+---
+title: "rArtPlayground"
+author: "Brady M. Chisholm"
+date: "2024-09-27"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+###############
+Formula Testing
+###############
+Added startSeq, endSeq, countMe, and the formula into titles in the plot. It is easy to save images of plots, but not the formulas along as I change them. Just record on plot. Improve reproducibility. 
+```{r my special fig one}
+library(ggplot2)
+library(dplyr)
+library(crayon)
+library(aRtsy)
+#####################
+# MAIN GRAPH OPTIONS#
+#####################
+# Generate sequenced values based on input; manipulate numbers to find interesting pattern / relationship
+  startSeq = 1
+  endSeq = 20000  
+  countMeBy = 2
+  pixelSize = 1
+# small step size smoother on larger sets of data? 
+# main need is to test different formulas  
+formula_str <- "(sin(x)*(x^2))"
+
+# Generate x values (sequence of numbers)
+plottingSeq <- seq(startSeq, endSeq, countMeBy)
+
+# Evaluate the formula for the x values
+formulaVals <- eval(parse(text = formula_str), list(x = plottingSeq))
+
+# decide custom colors. Code currently ramps / distributes a color gradient evenly for the n amount of points that exist 
+customPalette <-  c("#EDADC7","#A68BA5")
+palette_fn <-colorRampPalette(customPalette) 
+customColors <- palette_fn(length(plottingSeq))
+######KEEP OPEN OR KILLL###  
+#graphics.off()
+backgroundAspect <- c("#1C0F13","#6E7E85","#B7CECE","#BBBAC6","#E2E2E2")
+palette_fn <- colorRampPalette(backgroundAspect)
+backgroundAspectRamped <- palette_fn(length(plottingSeq))
+###########################  
+  # combine all of our values into a data frame to pass to ggPlot
+  mySpedData <- data.frame(x = plottingSeq, y = formulaVals, color = customColors)
+  # General fig code below. Includes use of custom color var
+  myFig <- ggplot(data = mySpedData) +
+    color = (customColors) +
+    size = (pixelSize) + 
+    scale_color_identity() +  # Use the first color for all points
+    ggtitle(paste(startSeq, "to", endSeq, "plot.", "Counted By =",countMeBy)) +  #title with num ranges and step size
+    labs(subtitle = bquote(.(formula_str))) +  # add formula in subtitle
+    guides(color = "none") + 
+    theme_bw() +
+    theme(
+      panel.background = element_rect(fill = backgroundAspectRamped, colour = "#E2E2E", linewidth = 3),
+      plot.background = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      axis.text = element_blank(),         
+      axis.ticks = element_blank(),        
+      axis.title = element_blank()         
+    )
+  # display figure
+  print(myFig)
+```
+ 
+```{r mathart butterfly function}
+butterfly_curve <- function(n = 1000, a = 12, b = 12, c = 2, d = 2,
+                            e = 4, f = 4, g = 5, h = 5, i = 12, j = 12) {
+  result <- data.frame(t = seq(0, a*pi, b*pi/n)) %>%
+    dplyr::mutate(x = sin(t) * (exp(cos(t)) - c*cos(e*t) - (sin(t/i))^g),
+                  y = cos(t) * (exp(cos(t)) - d*cos(f*t) - (sin(t/j))^h)) %>%
+    dplyr::select(-t)
+  result
+}
+```
+
+
+  if (save ==1){
+  saveMyFig <- function(myFunFig){
+  #FIXME add saving functionality to save figs with the range and step in title
+}}
+Formulas to try:
+
+
+##############################################################
+Generate an image of our custom colors on a evenly distributed gradient based on the length of our sequence
+```{r palette image}
+# generate image of our color on a gradiant 
+  imgMatrix <- matrix(1:length(plottingSeq), ncol = 1)
+# generate our random image 
+image(
+  x = imgMatrix, 
+  col = customColors, 
+  useRaster = TRUE,
+  axes = FALSE
+)
+```
+
+##############################################################
+Manipulate dims of the data. Currently identical to the code above. Should make proper edits to make sure no important vars overlap or anything... 
+```{r my special fig two, dim change}
+library(ggplot2)
+library(dplyr)
+library(crayon)
+#library(doMC) # crash? 
+#registerDoMC()
+#getDoParWorkers(4) #This lists how many workers you have (hopefully more than 1!)
+#####################
+# MAIN GRAPH OPTIONS#
+#####################
+  # manipulate these numbers so they have interesting pattern / relationship
+  # Generate sequenced values based on input
+  startSeq = -500
+  endSeq = 500
+  countMe = .5 
+  pixelSize = 2 
+# small step size looks smoother on plot?? 
+# main need is to test different formulas  
+formula_str <- "tan(cos(x^2))"  # change formula as needed
+
+#HELPER FUNCTION switch text to mathematical formula. A bit recursive 
+generateFormula <- function(formula) {
+  function(x) {eval(parse(text = formula))}}
+plottingSeq = seq(startSeq,endSeq,countMe) 
+
+# HELPER AI CODE: define formula as a string, create y vals for plot
+funkyForm_fn <- generateFormula(formula_str)
+formulaVals <- funkyForm_fn(plottingSeq)
+
+# decide custom colors. Code currently ramps / distributes a color gradient evenly for the n amount of points that exist 
+  customPalette <- c("#EDADC7","#A68BA5")
+  palette_fn <-colorRampPalette(customPalette) 
+  customColors <- palette_fn(length(plottingSeq))
+  
+  #graphics.off()
+  
+  # combine all of our values into a data frame to pass to ggPlot
+  mySpedData <- cbind.data.frame(x = plottingSeq, y = formulaVals, color = customColors)
+  # General fig code below. Includes use of custom color var
+  myFig <- ggplot(mySpedData) +
+    geom_point(aes(x,y, color = color),size = pixelSize)+ 
+    scale_color_identity() +  # Use the first color for all points
+    ggtitle(paste(startSeq, "to", endSeq, "plot.", "Step =",countMe)) +  #title with num ranges and step size
+    labs(subtitle = bquote(.(formula_str))) +  # add formula in subtitle
+    guides(color = "none") + 
+    theme_bw() +
+    theme(
+      plot.background = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      axis.text = element_blank(),         
+      axis.ticks = element_blank(),        
+      axis.title = element_blank()         
+    ) 
+  print(myFig)
+```
+
+Try to plot polar coords. I think regular ggplot & geom_point don't plot these like I want. 
+Seems like plots with polar coords may require something stronger like parallel computing. 
+```{r plot in polar}
+library(ggplot2)
+library(dplyr)
+library(crayon)
+#####################
+# MAIN GRAPH OPTIONS#
+#####################
+  # manipulate these numbers so they have interesting pattern / relationship
+  # Generate sequenced values based on input
+  startSeq = 1
+  endSeq = 1200
+  countMe = 1
+  pixelSize = .05 
+# small step size looks smoother on plot?? 
+# main need is to test different formulas  
+formula_str <- "(plottingSeq)^.05"  # change formula as needed
+
+#HELPER FUNCTION switch text to mathematical formula. A bit recursive 
+generateFormula <- function(formula) {
+function(x) {eval(parse(text = formula))}}
+plottingSeq = seq(startSeq,endSeq,countMe) 
+
+# HELPER AI CODE: define formula as a string, create y vals for plot
+funkyForm_fn <- generateFormula(formula_str)
+formulaVals <- funkyForm_fn(plottingSeq)
+
+# custom colors. Code currently ramps / distributes a color gradient evenly for the n amount of points that exist 
+  customPalette <- c("#EDADC7","#A68BA5")
+  palette_fn <-colorRampPalette(customPalette) 
+  customColors <- palette_fn(length(plottingSeq))
+  
+  #graphics.off()
+  
+  # wrangle into a data frame to pass to fig
+  mySpedData <- cbind.data.frame(x = plottingSeq, y = formulaVals, color = customColors)
+  
+  # Polar fig code below. Includes use of custom color var
+  myFig <- ggplot(mySpedData, aes(x = x, y = y, color = color)) +
+  geom_point(size = pixelSize) +  # Add points to plot
+  coord_polar() +  # Use polar coordinates
+  scale_color_identity() +  # Use custom colors
+  ggtitle(paste("Plot", startSeq,'to', endSeq, " ", "Step =", countMe)) +
+  labs(subtitle = formula_str) +  # Add formula as subtitle
+  guides(color = "none") + 
+  theme_bw() +
+  theme(
+    plot.background = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    axis.title = element_blank()
+  )
+
+print(myFig)
+```
+
+test out the aRtsy package
+source code on GitHub shows ggplot under the hood of this package. Formulas are just much more complex than I thought they would be. 
+```{r aRtsy chladni}
+library(aRtsy)
+# Simple example
+#canvas_chladni(colors = colorPalette("origami"))
+  #customPalette <- c("#EDADC7","#A68BA5")
+  customPalette <- c("#8B1E3F","#3C153B","#89BD9E","#F0C987","#DB4C40")
+  palette_fn <- {colorRampPalette(customPalette)}
+  customColors <- palette_fn(length(customPalette))
+  
+set.seed(1)
+# Advanced example
+canvas_chladni(
+  colors = customPalette,
+  waves = c(0,3,6,9,12,15,18,21,200),
+  warp = 35)
+```
+ 
+```{r planets}
+canvas_planet(
+  colors = customColors,
+  threshold = 4,
+  iterations = 500, # how many times algorithm runs 
+  starprob = 0.001, # probability of a star 
+  fade = .05, 
+  radius = NULL, # radius of planets. X Y below related  
+  center.x = NULL, 
+  center.y = -10,
+  light.right = TRUE, # light source direction
+  resolution = 1500
+)
+```
+
+This seems like it would be a good function to look at source code for...ggplot back-end 
+```{r segments}
+canvas_segments(
+  colors = customColors, 
+  background = 'white', # specify background for the art. null = white? 
+  n = 500, # number of line segments to draw 
+  p = 0.1, #probability of a vertical line segment 
+  H = .1, # scale factor of line segments 
+  size = 10) # size of line segments 
+```
+
+draw mesh? 
+```{r mesh}
+library(aRtsy)
+
+canvas_mesh(
+  colors = customColors,
+  background = "white",
+  transform = c("perlin", "fbm", "simplex", "cubic",
+                "worley", "knn", "rf", "svm"),
+  lines = 50,
+  iterations = 500,
+  mixprob = .5
+)
+
+#ggplot2::ggsave(filename = "mySuperCoolFigure_v1.0.0.jpg", plot = myCoolfig, width = 7, height = 7, dpi = 500)
+
+```
+solve color function problem...how to get gradient? 
+```{r color gradient trouble shoot}
+customPalette <- c("#8B1E3F","#3C153B","#89BD9E","#F0C987","#DB4C40")
+  palette_fn <- colorRampPalette(customPalette)
+  customColors <- palette_fn(100)
+
+image(1:length(customColors), 1, as.matrix(1:100), col = customGradient, useRaster = TRUE, axes = FALSE)
+```
+
+```{r custom color gradient function}
+gradientMyCols <- function(img = FALSE, ...){
+  # Capture colors as arguments
+  colors <- list(...)
+  
+  # Check if fewer than 2 colors provided
+  if(length(colors) < 2){
+    stop("You must provide 2 colors")}
+  
+  if(length(colors) > 8){ # limit max to 8 (currently)
+    warning("Only 8 colors will be used")
+    colors <- colors[1:8]}
+
+  colors <- unlist(colors) # colors to character vector 
+  
+  # Create the color gradient
+  palette_fn <- colorRampPalette(colors, bias = 1) # grDevices function 
+  
+  # If img true, generate gradient image
+  if (img) {
+    # Generate 150 colors for gradient
+    gradientColors <- palette_fn(150)
+    # Plot the gradient
+    image(1:150, 1, as.matrix(1:150), xlab = '', ylab='', col = gradientColors, useRaster = TRUE, axes = FALSE)}
+  
+    return(palette_fn) }# return color palette function 
+
+myGradient <- gradientMyCols(1,"#8B1E3F", "#3C153B", "#89BD9E")
+
+gradientMyCols(TRUE, "#8B1E3F", "#3C153B", "#89BD9E", "#F0C987", "#DB4C40")
+```
+
+
+```{r GPT ggplot art example}
+library(ggplot2)
+
+t <- seq(0, 10*pi, length.out = 1000)
+x <- t * cos(t)
+y <- t * sin(t)
+
+df <- data.frame(x = x, y = y)
+
+ggplot(df, aes(x = x, y = y)) +
+  geom_path(color = "purple", size = 1) +
+  theme_void()  # Remove axes and labels
+
+```
+
+```{r GPT grid based art }
+library(grid)
+
+grid.newpage()
+for (i in seq(0, 1, length.out = 20)) {
+  for (j in seq(0, 1, length.out = 20)) {
+    grid.circle(x = i, y = j, r = 0.02, gp = gpar(col = rgb(i, j, 0.5), fill = rgb(i, j, 0.5)))
+  }
+}
+
+```
+
+```{r use math libraries}
+# Example: Mandelbrot Set
+mandelbrot <- function(c, max_iter = 100) {
+  z <- c
+  for (i in 1:max_iter) {
+    z <- z^2 + c
+    if (Mod(z) > 2) return(i)
+  }
+  return(max_iter)
+}
+
+nx <- 800
+ny <- 800
+x <- seq(-2, 2, length.out = nx)
+y <- seq(-2, 2, length.out = ny)
+grid <- outer(x, y, FUN = function(x, y) mandelbrot(complex(real = x, imaginary = y)))
+
+image(x, y, grid, col = rainbow(100), useRaster = TRUE, axes = FALSE, xlab = "", ylab = "")
+
+```
+
+```{r turtle in R}
+library(TurtleGraphics)
+
+turtle_init(width = 10, height = 10)
+turtle_do({
+  for (i in 1:36) {
+    turtle_forward(50)  # Reduced distance
+    turtle_right(170)
+  }
+})
+
+```
+
+```{r spirographs}
+# Example: Hypotrochoid (Spirograph-like patterns)
+t <- seq(0, 2*pi, length.out = 1000)
+
+R <- 5   # Radius of the fixed circle
+r <- 3   # Radius of the moving circle
+d <- 5   # Distance from center of moving circle to the drawing point
+
+x <- (R - r) * cos(t) + d * cos(((R - r) / r) * t)
+y <- (R - r) * sin(t) - d * sin(((R - r) / r) * t)
+
+plot(x, y, type = 'l', col = "blue", axes = FALSE, xlab = "", ylab = "", asp = 1)
+
+```
+
+```{r mandelbrot set }
+mandelbrot <- function(c, max_iter = 100) {
+  z <- 0
+  for (i in 1:max_iter) {
+    z <- z^2 + c
+    if (Mod(z) > 2) return(i)
+  }
+  return(max_iter)
+}
+
+x_vals <- seq(-2, 1, length.out = 500)
+y_vals <- seq(-1.5, 1.5, length.out = 500)
+
+mandelbrot_set <- outer(x_vals, y_vals, Vectorize(function(x, y) mandelbrot(complex(real = x, imaginary = y))))
+
+image(x_vals, y_vals, mandelbrot_set, col = terrain.colors(100), axes = FALSE, xlab = "", ylab = "")
+
+```
+
+```{r Lorenz Attractor}
+library(deSolve)
+
+#The Lorenz system is a system of differential equations that exhibits chaotic behavior. It’s often visualized as an attractor in 3D space.
+lorenz <- function(t, state, parameters) {
+  with(as.list(c(state, parameters)), {
+    dx <- sigma * (y - x)
+    dy <- x * (rho - z) - y
+    dz <- x * y - beta * z
+    list(c(dx, dy, dz))
+  })
+}
+
+parameters <- c(sigma = 10, rho = 28, beta = 8/3)
+state <- c(x = 1, y = 1, z = 1)
+times <- seq(0, 100, by = 0.01)
+
+out <- ode(y = state, times = times, func = lorenz, parms = parameters)
+
+# Plotting the Lorenz attractor
+plot(out[, "x"], out[, "z"], type = "l", col = "red", xlab = "X", ylab = "Z", main = "Lorenz Attractor")
+
+```
+
+```{r sierpinski triangle}
+sierpinski <- function(n, p1, p2, p3) {
+  if (n == 0) {
+    lines(c(p1[1], p2[1]), c(p1[2], p2[2]))
+    lines(c(p2[1], p3[1]), c(p2[2], p3[2]))
+    lines(c(p3[1], p1[1]), c(p3[2], p1[2]))
+  } else {
+    mid1 <- (p1 + p2) / 2
+    mid2 <- (p2 + p3) / 2
+    mid3 <- (p3 + p1) / 2
+    sierpinski(n-1, p1, mid1, mid3)
+    sierpinski(n-1, mid1, p2, mid2)
+    sierpinski(n-1, mid3, mid2, p3)
+  }
+}
+
+plot.new()
+plot.window(xlim = c(0, 1), ylim = c(0, 1))
+
+sierpinski(5, c(0, 0), c(1, 0), c(0.5, sqrt(3)/2))
+
+```
+
+```{r 3-d plot of mathematical functions}
+library(plot3D)
+
+x <- seq(-10, 10, length.out = 100)
+y <- seq(-10, 10, length.out = 100)
+z <- outer(x, y, function(x, y) sin(sqrt(x^2 + y^2)))
+
+persp3D(x, y, z, col = "blue", theta = 30, phi = 20, ltheta = 120, shade = 0.5, ticktype = "detailed")
+
+```
+
+```{r vorovoi diagrams}
+library(deldir)
+
+set.seed(42)
+points <- data.frame(x = runif(30), y = runif(30))
+
+vor <- deldir(points$x, points$y)
+plot(vor, wlines = "both", lty = 1, lwd = 2, col = "black")
+points(points$x, points$y, col = "red", pch = 19)
+
+```
+
+```{r chaos game;triangle}
+chaos_game <- function(iter = 10000) {
+  vertices <- matrix(c(0, 0, 1, 0, 0.5, sqrt(3)/2), ncol = 2, byrow = TRUE)
+  x <- numeric(iter)
+  y <- numeric(iter)
+  x[1] <- runif(1)
+  y[1] <- runif(1)
+
+  for (i in 2:iter) {
+    vertex <- vertices[sample(1:3, 1), ]
+    x[i] <- (x[i-1] + vertex[1]) / 2
+    y[i] <- (y[i-1] + vertex[2]) / 2
+  }
+
+  plot(x, y, pch = ".", col = "darkgreen", asp = 1, axes = FALSE)
+}
+
+chaos_game()
+
+```
+
+```{r mathematical knots}
+library(rgl)
+
+# Trefoil knot parameterization
+t <- seq(1,pi, length.out = 100000)
+
+x <- -sin(t-2^3) + 5*sin(2*t)
+y <- cos(t+2) - 2*cos(2*t)
+z <- -sin(pi*t)
+set.seed(1)
+# Plot 3D trefoil knot
+plot3d(x, y, z, type = "p", radius = 10000, col = "darkgreen", lwd = .05, xlab = "X", ylab = "Y", zlab = "Z", decorate = TRUE)
+
+# Add axes
+```
+
+```{r brownian motion}
+# Load rgl for 3D plotting GUI 
+library(rgl)
+
+# Number of steps
+n <- cumsum(1:69)
+
+# Generate Brownian motion (random walk) in 3D
+set.seed(3)
+x <- cumsum(rnorm(n))
+y <- cumsum(rnorm(n))
+z <- cumsum(rnorm(n))
+
+# Plot the 3D random walk (Brownian motion)
+plot3d(x, y, z, type = "l", col = "red", lwd = 2, xlab = "X", ylab = "Y", zlab = "Z")
+
+# Add axes and grid
+axes3d()
+```
+
+```{r fourier transform on a waves}
+# Fourier Series for Square Wave approximation
+square_wave_fourier <- function(x, n_terms) {
+  y <- 0
+  for (n in seq(1, n_terms, by = 2)) {
+    y <- y + (4 / (pi * n)) * sin(n * x)}
+  return(y)}
+
+# create data
+x <- seq(0, 6*pi, length.out = 1000)
+
+# Approximate square wave with different numbers of Fourier terms
+y_3_terms <- square_wave_fourier(x, 10)   # 3 terms
+#y_9_terms <- square_wave_fourier(x, 9)   # 9 terms
+#y_99_terms <- square_wave_fourier(x, 500) # 500 terms
+
+# Plot the Fourier Series Approximation
+plot(x, y_3_terms, type = "l", col = "blue", lwd = 1, ylim = c(-2, 2), 
+     main = "Fourier Series Approximation of Square Wave", xlab = "x", ylab = "y")
+#lines(x, y_9_terms, col = "green", lwd = 2)
+#lines(x, y_99_terms, col = "red", lwd = 2)
+
+legend("bottomright", legend = c("10  terms"), col = c("blue"), lwd = 1)
+```
+
+```{r knot }
+t <- seq(0, pi^3, length.out = 1000)
+
+x <- (cos(7 * t)) * cos(2 * t)
+y <- (3+cos(7 * t)) * sin(2 * t)
+z <- sin(7 * t)
+
+# Plot the 3D cinquefoil knot
+plot3d(x, y, z, type = "s", col = "blue", lwd = 2, xlab = "X", ylab = "Y", zlab = "Z")
+```
+
+```{r use plot 3d function for other seq}
+plottingSeq <- seq(0, 6*pi, length.out = 1500)
+# main need is to test different formulas  
+formula_str <- "sqrt(plottingSeq)^.05"  # change formula as needed
+
+#HELPER FUNCTION switch text to mathematical formula. A bit recursive 
+generateFormula <- function(formula) {
+function(x) {eval(parse(text = formula))}}
+
+# HELPER GPT CODE: define formula as a string, create y vals for plot
+funkyForm_fn <- generateFormula(formula_str)
+formulaValsY <- funkyForm_fn(plottingSeq)
+
+formulaValsZ <- funkyForm_fn(plottingSeq)
+# custom colors. Code currently ramps / distributes a color gradient evenly for the n amount of points that exist 
+  customPalette <- c("#EDADC7","#A68BA5")
+  palette_fn <-colorRampPalette(customPalette) 
+  customColors <- palette_fn(length(plottingSeq))
+  
+  plot3d(formulaValsY,1:1000, 1:1000, type = 'p', col = '#A68BA5',lwd = 1)
+```
+
+```{r}
+library(ggplot2)
+
+set.seed(42)
+df <- data.frame(
+  x = runif(100),
+  y = runif(100),
+  group = sample(1:10, 100, replace = TRUE)
+)
+
+ggplot(df, aes(x, y, group = group)) +
+  geom_polygon(aes(fill = group), color = "white") +
+  theme_void() +
+  scale_fill_viridis_d()
+
+```
+
+```{r}
+library(aRtsy)
+
+set.seed(123)
+canvas_collatz(colors = c("#ff5733", "#33c1ff", "#f5f242"), 100)
+
+```
+
+```{r}
+# A trefoil knot
+open3d()
+theta <- seq(0, 2*pi, length.out = 25)
+knot <- cylinder3d(
+center = cbind(
+sin(theta) + 2*sin(2*theta),
+2*sin(3*theta),
+cos(theta) - 2*cos(2*theta)),
+e1 = cbind(
+cos(theta) + 4*cos(2*theta),
+6*cos(3*theta),
+sin(theta) + 4*sin(2*theta)),
+radius = 0.8,
+closed = TRUE,
+color = "green")
+shade3d(addNormals(subdivision3d(knot, depth = 1)))
+```
+it'd be funny if there was a tag at the end of my code 
+
+           _
+       .__(.)< (MEOW)
+        \___)   
+ 
+           _
+       .__(.)< (**QUACK!**)
+        \___)   
+ 
+kermit 
+
+ (+)(+)                     
+/      \  
+\ -==- / 
+ \    / 
+<\/\/\/> 
+/      \
+ Kermit
+ 
+   WW
+  /__\
+ | oo |      _WWWWW_
+(|_()_|)    /  o o  \
+  \__/    (|  __O__  |)
+ /|\/|\     \ \___/ /
+||||||||    /-------\
+||||||||   |=========|
+||||||||   |=========|
+    Bert & Ernie
+    
+        (o)(o)
+       /  ()  \
+     _ \ '--' / _ 
+    { '-`'"'"`-' }
+     `"/      \"`
+       \      /
+      _/  /\  \_  
+    {   /  \   }
+      `"`    `"`
+
+
+          _.-"""-._
+         /  _   _  \
+        /  (9) (9)  \
+       /_,         ,_\
+       | \         / |
+_      \  \._____./  /  __
+\`\     \   \___/   / _|  \
+ \ `\   /\         /\ \   /
+  |  `\/ /`'-----'`\ \/  /
+  |_|\/ /           \   /
+  /    /|           |\_/
+  \___/ |           | \
+   \ .  |           |  \
+    \|  |           |  |
+     |  `.         .'  |
+     \    `-.___.-'    /
+     `\       |       /'
+       `\     |     /'
+    .-.-.`\   |   /'.-.-.
+   (,(,(,`^   |   ^`,),),)
+    '-'-'-----`-----'-'-'
+```{r}
+library(ggforce)
+
+set.seed(123)
+df <- data.frame(
+  x = runif(100),
+  y = runif(100),
+  group = sample(1:5, 100, replace = TRUE)
+)
+
+ggplot(df, aes(x = x, y = y)) +
+  geom_voronoi_tile(aes(group = group, fill = group), color = "black") +
+  theme_void() +
+  scale_fill_manual(limits = NULL)
+
+```
+
+```{r}
+library(ggplot2)
+library(gganimate)
+
+# Create data with multiple time points
+set.seed(42)
+n <- 100
+df <- data.frame(
+  x = runif(n),
+  y = runif(n),
+  group = sample(1:5, n, replace = TRUE),
+  time = rep(1:20, each = n / 20)
+)
+
+# Animate the points moving
+p <- ggplot(df, aes(x = x, y = y, color = as.factor(group))) +
+  geom_point(size = 3) +
+  scale_color_viridis_d() +
+  theme_void() +
+  transition_time(time) + 
+  ease_aes('linear')
+
+# Save animation
+animate(p, nframes = 100, width = 800, height = 800)
+anim_save("generative_animation.gif")
+
+```
+Use the rgl() library to plot 3 dimensional pupil data over time. 
+  How to do this 
+- 5 different colors for the different SNR's 
+- use the dilation (AU) as the radius of the circle over time 
+ x = time
+ y = AU
+ z = radius?  
+```{r}
+library(rgl)
+t <- seq(-1, 1, length.out = 1000)
+
+x <- 1:12  # trial length 
+y <-  # let this be dilation in AU  
+z <- t 
+
+# Plot the 3D cinquefoil knot
+plot3d(x,z,y, type = "s", col = "blue", lwd = 2, xlab = "time", ylab = "A.U.", zlab = "radius")
+```
+
+

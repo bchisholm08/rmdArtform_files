@@ -1,0 +1,47 @@
+---
+title: "plottyArt_PRJ_one"
+author: "Brady M. Chisholm"
+date: "2024-09-27"
+output: html_document
+---
+```{r}
+plotMyCustomArtFunctionV_1 <- function(start, to, by){
+  library(ggplot2)
+  # generate our random sequence
+  plottingSequence <- seq(start, to, by)
+  # generate the 'funky' y coordinate from my formula 
+  specialFormVals <- sqrt((sin(plottingSequence)^10) * 5 * plottingSequence)
+  # define custom colors 
+  specialPalette <- c("#40798C", "#CFE0C3")
+  
+  # generate plot
+  myFig <- ggplot() +
+    geom_point(aes(x = plottingSequence, y = specialFormVals, color = plottingSequence)) + 
+    scale_color_gradientn(colors = specialPalette) +
+    guides(color = "none") + 
+    theme_bw() + 
+    theme(
+      plot.background = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      axis.text = element_blank(),         
+      axis.ticks = element_blank(),        
+      axis.title = element_blank()         
+    ) # close theme 
+  # return plot, needs print function  
+  print(myFig)
+} # function end } 
+
+# function call. Know for certain whether this needs to be in same code chuck or not?  
+plotMyCustomArtFunctionV_1(1,50000,6)
+
+```
+<start>,<to>,<by>
+
+Seems like ggplot knows to gradient between the two colors? 
+
+  Inputs to the function that've been cool! 
+plotMyCustomArtFunctionV_1(1,20000,5) super cool!! 
+plotMyCustomArtFunctionV_1(1,(10^10),10) crash out?
+plotMyCustomArtFunctionV_1(1,5000,3)

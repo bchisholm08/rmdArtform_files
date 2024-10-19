@@ -1,0 +1,92 @@
+---
+title: "plottyArt_PRJ_two"
+author: "Brady M. Chisholm"
+date: "2024-09-27"
+output: html_document
+---
+
+Nonfunction version for testing / updates
+```{r}
+graphics.off() # close all figs, but generate new ones 
+  library(ggplot2)
+  # Generate sequenced values based on input
+  startSeq = -1000
+  endSeq = 1000
+  countMe = .05 # small step size looks smoother on plot 
+  plottingSeq = seq(startSeq,endSeq,countMe) # ways to manipulate these numbers so they have an interesting pattern / relationship 
+  # generate the 'funky' y coordinate from my formula 
+  
+  formulaVals <- (plottingSeq+(plottingSeq^3))^4  
+  # define custom colors 
+  customPalette <- c("#EDADC7","#D199B6","#C493B0","#A68BA5")
+  palette_fn <-colorRampPalette(customPalette) 
+  
+  # Generate number of colors based on number of points 
+  customColors <- palette_fn(length(plottingSeq))
+  dataToPlot <- data.frame(x = plottingSeq, y = formulaVals, color = customColors)
+
+  # Generate fig 
+  myFig <- ggplot(dataToPlot, aes(x = y, y = x, color = color)) +
+    geom_point()+  # Use the first color for all points
+    scale_color_identity()+  # Use custom colors directly 
+    ggtitle(paste(startSeq, "to", endSeq, "plot")) + # title the plot with number ranges included 
+    guides(color = "none") + 
+    theme_bw() + # basic black and white theme 
+    theme(
+      plot.background = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      axis.text = element_blank(),         
+      axis.ticks = element_blank(),        
+      axis.title = element_blank()         
+    ) # close theme 
+  # return plot, needs print function  
+  print(myFig)
+```
+#################
+Function creation
+#################
+Plots before were cool, but looked pretty logarthmic. Would like to generate some plots that curve the data and allow for more abstract / random movement. Not sure if this is a ggplot manipulation or some math I need to do on the data. I think seed() function use is the only thing that generates truly random numbers?  
+
+Going to introduce degrees input so I am hopefully able to manipulate the data with some specified curve. 
+```{r}
+plotMyCustomArtFunctionV_2 <- function(start,end,by){
+  library(ggplot2)
+  # Generate sequenced values based on input
+  plottingSeq = seq(start,end,by) # ways to manipulate these numbers so they have an interesting pattern / relationship 
+  # generate the 'funky' y coordinate from my formula 
+  formulaVals <- sqrt((plottingSeq+(plottingSeq^3))^2) # boring formula 
+  # define custom colors 
+  customPalette <- c("#EDADC7","#D199B6","#C493B0","#A68BA5")
+  palette_fn <-colorRampPalette(customPalette) 
+  
+  # Generate number of colors based on number of points 
+  customColors <- palette_fn(length(plottingSeq))
+  dataToPlot <- data.frame(x = plottingSeq, y = formulaVals, color = customColors)
+
+  # Generate fig 
+  myFig <- ggplot(dataToPlot, aes(x = x, y = y, color = color)) +
+    geom_point()+  # Use the first color for all points
+    scale_color_identity()+  # Use custom colors directly 
+    ggtitle(paste(start, "to", end, "plot!")) + # title the plot with num ranges included 
+    guides(color = "none") + 
+    theme_bw() + 
+    theme(
+      plot.background = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      axis.text = element_blank(),         
+      axis.ticks = element_blank(),        
+      axis.title = element_blank()         
+    ) # close theme 
+  # return plot, needs print function  
+  print(myFig)
+  
+} # function end 
+## Call test cases ##
+```
+
+
+
