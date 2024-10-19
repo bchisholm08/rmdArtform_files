@@ -4,11 +4,11 @@ author: "Brady M. Chisholm"
 date: "2024-10-19"
 output: pdf_document
 ---
-Custom function takes n number of #----- formatted colors and converts them 
+Custom function takes n number of "#-----" formatted colors and converts them 
 into a smooth custom gradient over a predetermined distance.   
 
 ```{r custom color gradient function}
-gradientMyCols <- function(img = FALSE, ...){
+gradientMyCols <- function(imgPrint = FALSE, ...){
   # Capture colors as arguments
   colors <- list(...)
   # Check if fewer than 2 colors provided
@@ -19,16 +19,17 @@ gradientMyCols <- function(img = FALSE, ...){
     warning("Only 10 colors will be used. More than 10 were input")
     colors <- colors[1:10]}
 
-  colors <- unlist(colors) # colors to character vector 
+  colors <- unlist(colors) # convert colors to character vector 
   # Create the color gradient
   palette_fn <- colorRampPalette(colors, bias = 1) # grDevices function 
+  gradientColors <- palette_fn(150)
   # If img true, generate gradient image
-  if (img) {
-    gradientColors <- palette_fn(150)  # Generate 150 colors for gradient, relatively smooth
-    # Plot gradient
-    # currently blank labels...
+  if (imgPrint) {
+      # Generate 150 colors for gradient, relatively smooth
+    # plot gradient w/ blank labels...
     image(1:150, 1, as.matrix(1:150), xlab = '', ylab='', col = gradientColors, useRaster = TRUE, axes = FALSE)} # end image 
-    return(palette_fn)}# end function
+    return(gradientColors)} # changed function output to be result of palette_fn call
+# end function + if 
 ```
 ### EXAMPLES
 ```{r call function examples}

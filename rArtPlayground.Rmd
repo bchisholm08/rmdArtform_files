@@ -65,7 +65,7 @@ backgroundAspectRamped <- palette_fn(length(plottingSeq))
       panel.border = element_blank(),
       axis.text = element_blank(),         
       axis.ticks = element_blank(),        
-      axis.title = element_blank()         
+      axis.title = element_blank(),       
     )
   # display figure
   print(myFig)
