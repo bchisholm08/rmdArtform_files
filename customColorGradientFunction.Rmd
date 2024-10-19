@@ -11,7 +11,6 @@ into a smooth custom gradient over a predetermined distance.
 gradientMyCols <- function(img = FALSE, ...){
   # Capture colors as arguments
   colors <- list(...)
-  
   # Check if fewer than 2 colors provided
   if(length(colors) < 2){
     stop("You must provide minimum 2 colors")}
@@ -21,10 +20,8 @@ gradientMyCols <- function(img = FALSE, ...){
     colors <- colors[1:10]}
 
   colors <- unlist(colors) # colors to character vector 
-  
   # Create the color gradient
   palette_fn <- colorRampPalette(colors, bias = 1) # grDevices function 
-  
   # If img true, generate gradient image
   if (img) {
     gradientColors <- palette_fn(150)  # Generate 150 colors for gradient, relatively smooth
@@ -33,7 +30,6 @@ gradientMyCols <- function(img = FALSE, ...){
     image(1:150, 1, as.matrix(1:150), xlab = '', ylab='', col = gradientColors, useRaster = TRUE, axes = FALSE)} # end image 
     return(palette_fn)}# end function
 ```
-
 ### EXAMPLES
 ```{r call function examples}
 myGradient <- gradientMyCols(0,"#8B1E3F", "#3C153B", "#89BD9E") # no image but save gradient to var name 
