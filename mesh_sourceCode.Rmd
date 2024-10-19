@@ -1,0 +1,92 @@
+Source code from Koen Derks GitHub of his canvas_mesh function. Will deconstruct from a function into plain script 
+
+What does :: mean?? 
+```{r KD save ex}
+# to save art. Eliminates wait time if saved directly to file 
+artwork <- canvas_strokes(colors = c("black", "white"))
+saveCanvas(artwork, filename = "myArtwork.png")
+```
+
+```{r edit mesh source}
+getwd()
+#setwd("C:\Users\brady\OneDrive\Documents\Academics\Art\rmdArtform_files")
+source('KD_sourceCodeFunctions.Rmd')
+library(ggplot2)
+library(aRtsy)
+
+transformOptions <-c("perlin", "fbm", "simplex", "cubic","worley", "knn", "rf", "svm")
+color = "black"
+  background = "#fafafa"
+transform = "fbm"
+  #FIXME TRANSFORM OPTIONS c(
+  #"perlin", "fbm", "simplex", "cubic",
+  #"worley", "knn", "rf", "svm")
+
+lines = 100 # 500 org
+iterations = 500 # 500 org 
+mixprob = 0 
+
+# transform <- match.arg(transformOptions)
+transform = 'perlin' #FIXME match.arg weird error 
+# .checkUserInput(iterations = iterations, background = background) # take user input. check logical?  
+artwork <- ggplot2::ggplot()
+miny <- Inf
+maxy <- -Inf
+
+for (j in seq_along(colors)) {
+  circle_points <- seq(from = -pi, to = pi, length.out = lines)
+  start <- stats::runif(1, min = -10, max = 10)
+  centers <- data.frame(x = 0:iterations, y = c(start, start + .bmline(n = iterations, lwd = stats::runif(1, min = 1, max = 10))))
+  circle_centers <- predict(stats::loess(y ~ x, data = centers), newdata = centers)
+  
+  if (transform == "fbm") { # only special case if 'fbm' type transform? 
+    radius <- data.frame(x = 1:lines, y = .bmline(n = lines, lwd = stats::runif(1, min = 0.5, max = 1)))
+    circle_radius <- predict(stats::loess(y ~ x, data = radius), newdata = radius)
+  } else {
+    circle_radius <- c(.noise(c(1, lines), type = transform, limits = c(0.5, 1)))
+  }
+  radius_increase <- data.frame(x = 1:lines, y = stats::rnorm(lines, mean = 0, sd = stats::runif(1, min = 0.01, max = 0.5)))
+  circle_radius_increase <- predict(stats::loess(y ~ x, data = radius_increase), newdata = radius_increase)
+  x <- rep(0:iterations, each = lines) + 0.75 * cos(circle_points)
+  mesh <- cpp_mesh(
+    canvas = matrix(NA, nrow = lines * (iterations + 1), ncol = 2),
+    points = circle_points,
+    centers = circle_centers,
+    iterations = iterations,
+    start = start,
+    order = seq_len(lines),
+    radii = circle_radius,
+    increase = circle_radius_increase
+  )
+  
+  if (mixprob > 0) {
+    probs <- rep(1, length(colors))
+    probs[j] <- probs[j] + 1 / mixprob
+    col <- sample(colors, size = length(mesh[, 1]), replace = TRUE, prob = probs)
+  } else {
+    col <- colors(j) # was []
+  }
+  # create custom df 
+  df <- data.frame(x = x, y = mesh[, 1], z = mesh[, 2], col = col)
+  if (min(df[["y"]]) < miny) miny <- min(df[["y"]])
+  if (max(df[["y"]]) > maxy) maxy <- max(df[["y"]])
+  
+  artwork <- artwork + ggplot2::geom_line(
+    data = df,
+    mapping = ggplot2::aes(x = x, y = y, group = z, col = col),
+    alpha = 0.2, linewidth = 0.05
+  )
+} # end of if 
+21
+# is this section creating the artwork or is it the artwork <- assignment above?  
+artwork <- artwork + ggplot2::scale_color_manual(values = colors) +
+  ggplot2::scale_x_continuous(limits = c(-1, iterations + 1)) +
+  ggplot2::scale_y_continuous(limits = c(miny - abs(maxy - miny) / 10, maxy + abs(maxy - miny) / 10))
+artwork <- theme_canvas(artwork, background = background)
+
+# originally a return statement for the function 
+print(artwork)
+
+```
+
+

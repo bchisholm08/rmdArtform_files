@@ -1,0 +1,6 @@
+customColorGradientFunction.Rmd
+plottyArt_PRJ_one.RmdplottyArt_PRJ_one.Rmd
+plottyArt_PRJ_two.Rmd
+rArtPlayground.Rmd
+readMe.txt
+rmdArtform.Rmd
