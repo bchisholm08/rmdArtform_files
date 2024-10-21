@@ -145,6 +145,7 @@ saveCanvas(artwork, filename = "myArtwork.png")
   cat("\n", if (is.null(name)) NULL else paste0("[", name, "]"), "Runtime:", round(s2 - s1, 5), "seconds\n")
   return(invisible(as.numeric(s2 - s1)))
 }
+
 ```
 
 ```{r edit mesh source}
@@ -175,11 +176,11 @@ artwork <- ggplot2::ggplot()
 miny <- Inf
 maxy <- -Inf
 
-for (j in seq_along(colors)) {
-  circle_points <- seq(from = -pi, to = pi, length.out = lines)
+for (j in seq_along(colors)) { # for j in seq_along colors inputed 
+  circle_points <- seq(from = -pi, to = pi, length.out = lines) # seq pi to pi, give back num of lines 
   start <- stats::runif(1, min = -10, max = 10)
   centers <- data.frame(x = 0:iterations, y = c(start, start + .bmline(n = iterations, lwd = stats::runif(1, min = 1, max = 10))))
-  circle_centers <- predict(stats::loess(y ~ x, data = centers), newdata = centers)
+  circle_centers <- predict(stats::loess(y ~ x, data = centers), newdata = centers) # use stats to estimate points for data 
   
   if (transform == "fbm") { # only special case if 'fbm' type transform? 
     radius <- data.frame(x = 1:lines, y = .bmline(n = lines, lwd = stats::runif(1, min = 0.5, max = 1)))
@@ -187,8 +188,12 @@ for (j in seq_along(colors)) {
   } else {
     circle_radius <- c(.noise(c(1, lines), type = transform, limits = c(0.5, 1)))
   }
+  # end of if transform is fbm 
+  
   radius_increase <- data.frame(x = 1:lines, y = stats::rnorm(lines, mean = 0, sd = stats::runif(1, min = 0.01, max = 0.5)))
   circle_radius_increase <- predict(stats::loess(y ~ x, data = radius_increase), newdata = radius_increase)
+  
+  # creation of X var 
   x <- rep(0:iterations, each = lines) + 0.75 * cos(circle_points)
   mesh <- cpp_mesh(
     canvas = matrix(NA, nrow = lines * (iterations + 1), ncol = 2),
@@ -199,8 +204,9 @@ for (j in seq_along(colors)) {
     order = seq_len(lines),
     radii = circle_radius,
     increase = circle_radius_increase
-  )
+  ) 
   
+  # if mixprob input is true
   if (mixprob > 0) {
     probs <- rep(1, length(colors))
     probs[j] <- probs[j] + 1 / mixprob
@@ -208,27 +214,29 @@ for (j in seq_along(colors)) {
   } else {
     col <- colors(j) # was []
   }
-  # create custom df 
+  
+  # create custom df from x generated from rep(), and 'y' created w/ custom function 
   df <- data.frame(x = x, y = mesh[, 1], z = mesh[, 2], col = col)
   if (min(df[["y"]]) < miny) miny <- min(df[["y"]])
   if (max(df[["y"]]) > maxy) maxy <- max(df[["y"]])
   
+  # create artwork object 
   artwork <- artwork + ggplot2::geom_line(
     data = df,
     mapping = ggplot2::aes(x = x, y = y, group = z, col = col),
     alpha = 0.2, linewidth = 0.05
   )
 } # end if 
-21
-# is this section creating the artwork or is it the artwork <- assignment above?  
+
+# is this section creating the artwork or is it the artwork <- assignment above?
+    # alternative artwork if the 'if' statement from line 229 is not executed
 artwork <- artwork + ggplot2::scale_color_manual(values = colors) +
   ggplot2::scale_x_continuous(limits = c(-1, iterations + 1)) +
   ggplot2::scale_y_continuous(limits = c(miny - abs(maxy - miny) / 10, maxy + abs(maxy - miny) / 10))
 artwork <- theme_canvas(artwork, background = background)
 
-# originally a return statement for the function 
+# originally a return statement for the function return(print(artwork))
 print(artwork)
-
 ```
 
 
