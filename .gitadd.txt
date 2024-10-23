@@ -4,3 +4,5 @@ plottyArt_PRJ_two.Rmd
 rArtPlayground.Rmd
 readMe.txt
 rmdArtform.Rmd
+gitMyAnimation.py
+gitPageAnimation.Rmd
